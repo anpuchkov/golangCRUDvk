@@ -8,6 +8,7 @@ import (
 
 var logger *zap.Logger
 
+// InitLogger логгер необходимо инициализировать при запуске приложения
 func InitLogger() *zap.Logger {
 	var err error
 

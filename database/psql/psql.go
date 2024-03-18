@@ -9,7 +9,7 @@ import (
 )
 
 func InitPostgresConnection(ctx context.Context, cfg pgconn.Config) (*pgxpool.Pool, error) {
-	connString := fmt.Sprintf("host=%s port=%v user=%s password=%s dbname=%s search_path=srvc", cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Database)
+	connString := fmt.Sprintf("host=%s port=%v user=%s password=%s dbname=%s search_path=filmoteka", cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Database)
 	pool, err := pgxpool.New(ctx, connString)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to the database")

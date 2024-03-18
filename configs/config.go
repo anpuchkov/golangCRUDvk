@@ -1,4 +1,4 @@
-package config
+package configs
 
 import (
 	"github.com/jackc/pgx/v5/pgconn"
@@ -19,12 +19,12 @@ func ConfigInit() (*AppConfig, error) {
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to read config file")
+		return nil, errors.Wrap(err, "failed to read configs file")
 	}
 
 	dbConfig, err := loadDBConfig()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to load DB config")
+		return nil, errors.Wrap(err, "failed to load DB configs")
 	}
 
 	return &AppConfig{

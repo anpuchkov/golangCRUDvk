@@ -6,6 +6,6 @@ db:
 #            sslmode: "disable"
     port: '5432'
     host: "localhost"
-docker:
-  postgres:
-    image: postgres:14
+#docker:
+#  postgres:
+#    image: postgres:14
