@@ -22,7 +22,7 @@ type Movie struct {
 	Rating      float64     `json:"rating"`
 }
 
-// User Структура для пользователей
+// User Структура для пользователей
 type User struct {
 	ID               int       `json:"id"`
 	Username         string    `json:"username"`
@@ -31,6 +31,7 @@ type User struct {
 	RegistrationDate time.Time `json:"registration_date"`
 }
 
+// MovieActor Структура для фильмов и актеров
 type MovieActor struct {
 	ID          int         `json:"id"`
 	Title       string      `json:"title"`

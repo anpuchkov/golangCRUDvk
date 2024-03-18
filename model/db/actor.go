@@ -25,7 +25,7 @@ func DeleteActor(db *pgx.Conn) http.HandlerFunc {
 
 func UpdateActor(db *pgx.Conn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Проверяем, является ли пользователь администратором
+
 		if !isAdmin(r) {
 			http.Error(w, "Access forbidden", http.StatusForbidden)
 			return

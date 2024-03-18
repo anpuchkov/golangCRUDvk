@@ -7,7 +7,6 @@ import (
 	"strings"
 )
 
-// adminAuthentication проверяет аутентификацию администратора на основе учетных данных из базы данных.
 func adminAuthentication(r *http.Request, db *sql.DB) bool {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
@@ -32,7 +31,7 @@ func adminAuthentication(r *http.Request, db *sql.DB) bool {
 	username := credentials[0]
 	password := credentials[1]
 
-	row := db.QueryRow("SELECT username, password FROM admin WHERE username = $1", username)
+	row := db.QueryRow("SELECT username, password FROM users WHERE username = $1", username)
 	var dbUsername, dbPassword string
 	err = row.Scan(&dbUsername, &dbPassword)
 	if err != nil {
@@ -45,7 +44,6 @@ func adminAuthentication(r *http.Request, db *sql.DB) bool {
 	return username == dbUsername && password == dbPassword
 }
 
-// AdminAuthMiddleware предоставляет промежуточное ПО для аутентификации администратора.
 func AdminAuthMiddleware(next http.Handler, db *sql.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !adminAuthentication(r, db) {
@@ -89,15 +87,13 @@ func userAuthentication(r *http.Request, db *sql.DB) bool {
 		if err == sql.ErrNoRows {
 			return false
 		}
-		// Если произошла другая ошибка, возвращаем false
+
 		return false
 	}
 
-	// Сравниваем полученные учетные данные с учетными данными пользователя из базы данных
 	return username == dbUsername && password == dbPassword
 }
 
-// UserAuthMiddleware предоставляет промежуточное ПО для аутентификации пользователя.
 func UserAuthMiddleware(next http.Handler, db *sql.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Проверяем аутентификацию пользователя
