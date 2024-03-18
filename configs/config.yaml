@@ -1,0 +1,11 @@
+db:
+  postgres:
+    username: "postgres"
+    password: "1234"
+    dbname: "films"
+#            sslmode: "disable"
+    port: '5432'
+    host: "localhost"
+docker:
+  postgres:
+    image: postgres:14
