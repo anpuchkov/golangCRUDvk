@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"vkFilmoteka/configs"
 	"vkFilmoteka/database/psql"
+	"vkFilmoteka/model/db"
 	db2 "vkFilmoteka/server"
 	"vkFilmoteka/server/logs"
 	"vkFilmoteka/server/middleware"
@@ -14,6 +15,7 @@ import (
 
 func main() {
 	ctx := context.Background()
+	db.InitSessionStore()
 	cfg, err := configs.ConfigInit()
 	if err != nil {
 		log.Println("failed to initialize configs: ", err)
@@ -47,6 +49,10 @@ func main() {
 		Handler: middleware.LoggingMiddleware(logger, http.DefaultServeMux),
 	}
 
-	s.ListenAndServe()
+	err = s.ListenAndServe()
+	if err != nil {
+		logs.Error("failed to start server: ", zap.Error(err))
+		return
+	}
 
 }

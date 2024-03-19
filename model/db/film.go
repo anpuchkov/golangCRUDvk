@@ -76,6 +76,11 @@ func DeleteMovie(db *pgxpool.Pool, logger *zap.Logger) http.HandlerFunc {
 
 func GetMovies(db *pgxpool.Pool, logger *zap.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if !isUser(r) {
+			logs.Error("Access forbidden")
+			http.Error(w, "Access forbidden", http.StatusForbidden)
+			return
+		}
 		rows, err := db.Query(r.Context(), `
             SELECT id, title, description, release_date, rating
             FROM movies ORDER BY rating DESC
@@ -111,6 +116,11 @@ func GetMovies(db *pgxpool.Pool, logger *zap.Logger) http.HandlerFunc {
 
 func GetMoviesByPartOfTitle(db *pgxpool.Pool, logger *zap.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if !isUser(r) {
+			logs.Error("Access forbidden")
+			http.Error(w, "Access forbidden", http.StatusForbidden)
+			return
+		}
 		partOfTitle := r.URL.Query().Get("partOfTitle")
 		if partOfTitle == "" {
 			http.Error(w, "Part of title is required", http.StatusBadRequest)
@@ -153,6 +163,11 @@ func GetMoviesByPartOfTitle(db *pgxpool.Pool, logger *zap.Logger) http.HandlerFu
 
 func GetMoviesWithSort(db *pgxpool.Pool, logger *zap.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if !isUser(r) {
+			logs.Error("Access forbidden")
+			http.Error(w, "Access forbidden", http.StatusForbidden)
+			return
+		}
 		sortType := r.URL.Query().Get("sortType")
 		if sortType == "" {
 			sortType = "rating"
@@ -164,6 +179,7 @@ func GetMoviesWithSort(db *pgxpool.Pool, logger *zap.Logger) http.HandlerFunc {
 			return
 		}
 
+		// Получаем список фильмов с сортировкой из базы данных
 		var rows pgx.Rows
 		var err error
 		switch sortType {
@@ -193,6 +209,7 @@ func GetMoviesWithSort(db *pgxpool.Pool, logger *zap.Logger) http.HandlerFunc {
 		}
 		defer rows.Close()
 
+		// Преобразуем строки результата запроса в структуры Movie
 		var movies []domain.Movie
 		for rows.Next() {
 			var movie domain.Movie
@@ -205,6 +222,7 @@ func GetMoviesWithSort(db *pgxpool.Pool, logger *zap.Logger) http.HandlerFunc {
 			movies = append(movies, movie)
 		}
 
+		// Преобразуем список фильмов в JSON и отправляем клиенту
 		err = json.NewEncoder(w).Encode(movies)
 		if err != nil {
 			logs.Error("Failed to encode movies to JSON", zap.Error(err))
@@ -230,11 +248,13 @@ func AddMovie(db *pgxpool.Pool, logger *zap.Logger) http.HandlerFunc {
 			return
 		}
 
+		// Добавляем текущую дату в качестве даты добавления фильма
 		movie.ReleaseDate = pgtype.Date{
 			Time:  time.Now(),
 			Valid: true,
 		}
 
+		// Выполняем запрос INSERT для добавления фильма в базу данных
 		var movieID int
 		err = db.QueryRow(r.Context(), `
             INSERT INTO Movies (title, description, release_date, rating)
@@ -252,6 +272,9 @@ func AddMovie(db *pgxpool.Pool, logger *zap.Logger) http.HandlerFunc {
 }
 
 func isAdmin(r *http.Request) bool {
-	// Здесь должна быть реализация проверки, является ли пользователь администратором
+	if r.Header.Get("Authorization") != "admin" {
+		return false
+	}
+	//todo: check if user is admin
 	return true
 }

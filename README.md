@@ -18,6 +18,18 @@ go mod tidy
 
 Put the package under your project folder and add the following in import
 
+## Authorization for users
+
+Simple authorization and register with 2 spaces. For authorize, use 
+/login page. For register use /register page.
+```json
+{
+  "username": "your-username",
+  "password": "your-password"
+}
+```
+
+
 ## Configuration of Server URL
 
 Default configuration comes with `Servers` field that contains server objects as defined in the OpenAPI specification.

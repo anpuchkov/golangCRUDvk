@@ -6,7 +6,7 @@ import (
 )
 
 // LoggingMiddleware /* Используем Middleware для логгирования входящих и исходящих HTTP-запросов.
-// Zap для будущего логгирования и записи логов в файл.
+// Zap для будущего логгирования и записи логов в файл или другое хранилище.
 func LoggingMiddleware(logger *zap.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		logger.Info(

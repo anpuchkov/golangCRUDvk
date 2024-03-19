@@ -24,11 +24,9 @@ type Movie struct {
 
 // User Структура для пользователей
 type User struct {
-	ID               int       `json:"id"`
-	Username         string    `json:"username"`
-	Password         string    `json:"password"`
-	Email            string    `json:"email"`
-	RegistrationDate time.Time `json:"registration_date"`
+	ID       int
+	Username string
+	Password string
 }
 
 // MovieActor Структура для фильмов и актеров

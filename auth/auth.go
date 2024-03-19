@@ -1,4 +1,4 @@
-package db
+package auth
 
 import (
 	"context"
@@ -6,16 +6,10 @@ import (
 	"errors"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
+	"vkFilmoteka/domain"
 )
 
-// User represents a user in the system
-type User struct {
-	ID       int
-	Username string
-	Password string
-}
-
-// RegisterUser registers a new user in the system
+// RegisterUser регистрация пользователя.
 func RegisterUser(db *pgxpool.Pool, username, password string) error {
 	var count int
 	err := db.QueryRow(context.TODO(), "SELECT COUNT(id) FROM users WHERE username = $1", username).Scan(&count)
@@ -37,8 +31,8 @@ func RegisterUser(db *pgxpool.Pool, username, password string) error {
 }
 
 // AuthenticateUser аутентифицирует пользователя по имени пользователя и паролю
-func AuthenticateUser(db *pgxpool.Pool, username, password string) (*User, error) {
-	var user User
+func AuthenticateUser(db *pgxpool.Pool, username, password string) (*domain.User, error) {
+	var user domain.User
 	err := db.QueryRow(context.TODO(), "SELECT id, username, password FROM users WHERE username = $1", username).Scan(&user.ID, &user.Username, &user.Password)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -57,12 +51,15 @@ func AuthenticateUser(db *pgxpool.Pool, username, password string) (*User, error
 // hashPassword хэширует пароль
 func hashPassword(password string) string {
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-
+	// лучше конечно agron2 или pbkdf2
 	return string(hashedPassword)
 }
 
 // checkPassword проверяет совпадение хэшированного пароля с исходным паролем
 func checkPassword(password, hashedPassword string) bool {
-	bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
-	return password == hashedPassword
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	if err != nil {
+		return false
+	}
+	return err == nil
 }
