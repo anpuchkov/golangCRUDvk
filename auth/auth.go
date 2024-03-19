@@ -1,109 +1,68 @@
-package auth
+package db
 
 import (
+	"context"
 	"database/sql"
-	"encoding/base64"
-	"net/http"
-	"strings"
+	"errors"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"golang.org/x/crypto/bcrypt"
 )
 
-func adminAuthentication(r *http.Request, db *sql.DB) bool {
-	authHeader := r.Header.Get("Authorization")
-	if authHeader == "" {
-		return false
-	}
+// User represents a user in the system
+type User struct {
+	ID       int
+	Username string
+	Password string
+}
 
-	if !strings.HasPrefix(authHeader, "Basic ") {
-		return false
-	}
-
-	token := strings.TrimPrefix(authHeader, "Basic ")
-
-	decodedToken, err := base64.StdEncoding.DecodeString(token)
+// RegisterUser registers a new user in the system
+func RegisterUser(db *pgxpool.Pool, username, password string) error {
+	var count int
+	err := db.QueryRow(context.TODO(), "SELECT COUNT(id) FROM users WHERE username = $1", username).Scan(&count)
 	if err != nil {
-		return false
+		return err
+	}
+	if count > 0 {
+		return errors.New("username already exists")
 	}
 
-	credentials := strings.SplitN(string(decodedToken), ":", 2)
-	if len(credentials) != 2 {
-		return false
-	}
-	username := credentials[0]
-	password := credentials[1]
+	hashedPassword := hashPassword(password)
 
-	row := db.QueryRow("SELECT username, password FROM users WHERE username = $1", username)
-	var dbUsername, dbPassword string
-	err = row.Scan(&dbUsername, &dbPassword)
+	_, err = db.Exec(context.TODO(), "INSERT INTO users (username, password) VALUES ($1, $2)", username, hashedPassword)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// AuthenticateUser аутентифицирует пользователя по имени пользователя и паролю
+func AuthenticateUser(db *pgxpool.Pool, username, password string) (*User, error) {
+	var user User
+	err := db.QueryRow(context.TODO(), "SELECT id, username, password FROM users WHERE username = $1", username).Scan(&user.ID, &user.Username, &user.Password)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return false
+			return nil, errors.New("user not found")
 		}
-		return false
+		return nil, err
 	}
 
-	return username == dbUsername && password == dbPassword
+	if !checkPassword(password, user.Password) {
+		return nil, errors.New("incorrect password")
+	}
+
+	return &user, nil
 }
 
-func AdminAuthMiddleware(next http.Handler, db *sql.DB) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !adminAuthentication(r, db) {
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte("Unauthorized"))
-			return
-		}
+// hashPassword хэширует пароль
+func hashPassword(password string) string {
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 
-		next.ServeHTTP(w, r)
-	})
+	return string(hashedPassword)
 }
 
-func userAuthentication(r *http.Request, db *sql.DB) bool {
-	authHeader := r.Header.Get("Authorization")
-	if authHeader == "" {
-		return false
-	}
-
-	if !strings.HasPrefix(authHeader, "Basic ") {
-		return false
-	}
-
-	token := strings.TrimPrefix(authHeader, "Basic ")
-
-	decodedToken, err := base64.StdEncoding.DecodeString(token)
-	if err != nil {
-		return false
-	}
-
-	credentials := strings.SplitN(string(decodedToken), ":", 2)
-	if len(credentials) != 2 {
-		return false
-	}
-	username := credentials[0]
-	password := credentials[1]
-
-	row := db.QueryRow("SELECT username, password FROM users WHERE username = $1", username)
-	var dbUsername, dbPassword string
-	err = row.Scan(&dbUsername, &dbPassword)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return false
-		}
-
-		return false
-	}
-
-	return username == dbUsername && password == dbPassword
-}
-
-func UserAuthMiddleware(next http.Handler, db *sql.DB) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Проверяем аутентификацию пользователя
-		if !userAuthentication(r, db) {
-			// Возвращаем ошибку, если аутентификация не удалась
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte("Unauthorized"))
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
+// checkPassword проверяет совпадение хэшированного пароля с исходным паролем
+func checkPassword(password, hashedPassword string) bool {
+	bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	return password == hashedPassword
 }
