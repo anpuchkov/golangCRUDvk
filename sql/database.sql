@@ -132,7 +132,6 @@ CREATE TABLE filmoteka.users (
                                  id integer NOT NULL,
                                  username character varying(255),
                                  password character varying(255),
-                                 email character varying(255),
                                  registration_date timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
