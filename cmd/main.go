@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
-	"go.uber.org/zap"
+	"fmt"
 	"log"
 	"net/http"
+
+	"go.uber.org/zap"
 	"vkFilmoteka/configs"
 	"vkFilmoteka/database/psql"
 	"vkFilmoteka/model/db"
@@ -15,6 +17,7 @@ import (
 
 func main() {
 	ctx := context.Background()
+	fmt.Sprintf("Starting server...")
 	db.InitSessionStore()
 	cfg, err := configs.ConfigInit()
 	if err != nil {
