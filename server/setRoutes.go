@@ -1,9 +1,10 @@
 package server
 
 import (
+	"net/http"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
-	"net/http"
 	db2 "vkFilmoteka/model/db"
 )
 
@@ -18,5 +19,5 @@ func SetupRoutes(db *pgxpool.Pool, logger *zap.Logger) {
 	http.HandleFunc("/movies/delete", db2.DeleteMovie(db, logger))
 	http.HandleFunc("/movies/sort", db2.GetMoviesWithSort(db, logger))
 	http.HandleFunc("/movies", db2.GetMovies(db, logger))
-	http.HandleFunc("/movies/search", db2.GetMoviesByPartOfTitle(db, logger))
+	//http.HandleFunc("/movies/search", db2.GetMoviesByPartOfTitle(db, logger))
 }
